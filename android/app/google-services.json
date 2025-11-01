@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "214737590735",
+    "project_id": "medilink-36fad",
+    "storage_bucket": "medilink-36fad.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:214737590735:android:03a55c17a73cafaa069aba",
+        "android_client_info": {
+          "package_name": "com.example.medilink"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "214737590735-5vhjs28g9979t7b90rl79gs3cbluv08j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQQmHJzdZfXUinlXaNq7uGZHytSpyi-a4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "214737590735-5vhjs28g9979t7b90rl79gs3cbluv08j.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "214737590735-54q9f0h528ikmq1ulf8hsl8oi4vkn08t.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.medilink"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:214737590735:android:1682a060f4680465069aba",
+        "android_client_info": {
+          "package_name": "com.example.medilink_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "214737590735-5vhjs28g9979t7b90rl79gs3cbluv08j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQQmHJzdZfXUinlXaNq7uGZHytSpyi-a4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "214737590735-5vhjs28g9979t7b90rl79gs3cbluv08j.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "214737590735-54q9f0h528ikmq1ulf8hsl8oi4vkn08t.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.medilink"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
