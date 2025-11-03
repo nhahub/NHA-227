@@ -2,33 +2,38 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class PaymentService {
-PaymentService();
-  static final instance = PaymentService();
+  PaymentService._();
+  static final PaymentService instance = PaymentService._();
 
-final _db = FirebaseFirestore.instance;
-final _auth = FirebaseAuth.instance;
+final FirebaseFirestore _db = FirebaseFirestore.instance;
+final FirebaseAuth _auth = FirebaseAuth.instance;
 
 String get _uid {
-final u = _auth.currentUser;
-if (u == null) {
+final user = _auth.currentUser;
+if (user == null) {
 throw StateError('No logged-in user. Please sign in first.');
 }
-return u.uid;
+return user.uid;
 }
 
 CollectionReference<Map<String, dynamic>> _pmCol(String uid) =>
 _db.collection('users').doc(uid).collection('paymentMethods');
 
+// Check if user has at least one saved payment method
 Future hasAnyPaymentMethod() async {
 final uid = _uid;
 final snap = await _pmCol(uid).limit(1).get();
 return snap.docs.isNotEmpty;
 }
 
+// Save a credit card (safe fields only). Returns document id.
+// cardNumber: full entry from the form; only last4 + brand are stored.
+// exp: "MM/YY"
 Future saveCard({
 required String holderName,
-required String cardNumber, // we only store last4 + brand
-required String exp, // MM/YY or MM/YYYY
+required String cardNumber,
+required String exp,
+bool saved = true,
 }) async {
 final uid = _uid;
 
@@ -49,21 +54,54 @@ await ref.set({
   'last4': last4,
   'expMonth': mm,
   'expYear': yyyy,
+  'saved': saved, // reflects the checkbox
   'createdAt': FieldValue.serverTimestamp(),
 });
+
 return ref.id;
 }
 
-Future savePayPal() async {
+// Save a PayPal method. Returns document id.
+Future savePayPal({
+required String email,
+bool saved = true,
+}) async {
 final uid = _uid;
+
 final ref = _pmCol(uid).doc();
 await ref.set({
-'type': 'paypal',
-'createdAt': FieldValue.serverTimestamp(),
+  'type': 'paypal',
+  'email': email,
+  'saved': saved,
+  'createdAt': FieldValue.serverTimestamp(),
 });
+
 return ref.id;
 }
 
+// Optional: stream all methods for the user (useful for a "Payment Methods" page)
+Stream<List<Map<String, dynamic>>> watchPaymentMethods() {
+final uid = _uid;
+return _pmCol(uid)
+.orderBy('createdAt', descending: true)
+.snapshots()
+.map((q) => q.docs.map((d) => {'id': d.id, ...d.data()}).toList());
+}
+
+// Optional: get all methods once
+Future<List<Map<String, dynamic>>> getPaymentMethods() async {
+final uid = _uid;
+final snap = await _pmCol(uid).orderBy('createdAt', descending: true).get();
+return snap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+}
+
+// Optional: delete a method by id
+Future deletePaymentMethod(String id) async {
+final uid = _uid;
+await _pmCol(uid).doc(id).delete();
+}
+
+// Brand detection (basic)
 String _detectBrand(String digits) {
 if (digits.startsWith('4')) return 'Visa';
 if (RegExp(r'^(5[1-5])').hasMatch(digits)) return 'Mastercard';
@@ -72,4 +110,3 @@ if (RegExp(r'^(6(?:011|5))').hasMatch(digits)) return 'Discover';
 return 'Card';
 }
 }
-
