@@ -8,13 +8,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
 
   AuthBloc(this._authRepository) : super(AuthInitial()) {
-    on<SignInEvent>(_signIn);
-    on<SignUpEvent>(_signUp);
-    on<ForgotPasswordEvent>(_forgotPassword);
-    on<SignOutEvent>(_signOut);
+    on<SignInEvent>(_onSignIn);
+    on<SignUpEvent>(_onSignUp);
+    on<ForgotPasswordEvent>(_onForgotPassword);
+    on<SignOutEvent>(_onSignOut);
+
+    on<SendVerificationCodeEvent>(_onSendVerificationCode);
+    on<VerifyCodeEvent>(_onVerifyCode);
+    on<ResendCodeEvent>(_onResendCode);
+
+    on<GoogleSignInEvent>(_onGoogleSignIn);
   }
 
-  Future<void> _signIn(SignInEvent event, Emitter<AuthState> emit) async {
+  // ---------------------------------------------------------------------------
+  // EMAIL / PASSWORD SIGN-IN
+  // ---------------------------------------------------------------------------
+
+  Future<void> _onSignIn(SignInEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
       final user = await _authRepository.signIn(
@@ -27,18 +37,31 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _signUp(SignUpEvent event, Emitter<AuthState> emit) async {
+  // ---------------------------------------------------------------------------
+  // SIGN-UP
+  // ---------------------------------------------------------------------------
+
+  Future<void> _onSignUp(SignUpEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      final user = await _authRepository.signUp(email: event.email, password: event.password);
-      // Optionally save user name in Firestore or update profile here
+      final user = await _authRepository.signUp(
+        email: event.email,
+        password: event.password,
+      );
       emit(AuthSuccess(user));
     } catch (e) {
       emit(AuthFailure(e.toString()));
     }
   }
 
-  Future<void> _forgotPassword(ForgotPasswordEvent event, Emitter<AuthState> emit) async {
+  // ---------------------------------------------------------------------------
+  // FORGOT PASSWORD
+  // ---------------------------------------------------------------------------
+
+  Future<void> _onForgotPassword(
+      ForgotPasswordEvent event,
+      Emitter<AuthState> emit,
+      ) async {
     emit(AuthLoading());
     try {
       await _authRepository.sendPasswordResetEmail(event.email);
@@ -48,8 +71,124 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _signOut(SignOutEvent event, Emitter<AuthState> emit) async {
-    await _authRepository.signOut();
-    emit(AuthInitial());
+  // ---------------------------------------------------------------------------
+  // SIGN OUT
+  // ---------------------------------------------------------------------------
+
+  Future<void> _onSignOut(SignOutEvent event, Emitter<AuthState> emit) async {
+    try {
+      await _authRepository.signOut();
+      emit(AuthInitial());
+    } catch (e) {
+      emit(AuthFailure(e.toString()));
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // PHONE / EMAIL VERIFICATION (CODE SENDING)
+  // ---------------------------------------------------------------------------
+
+  Future<void> _onSendVerificationCode(
+      SendVerificationCodeEvent event,
+      Emitter<AuthState> emit,
+      ) async {
+    emit(AuthLoading());
+    try {
+      if (event.isSms) {
+        await _authRepository.verifyPhoneNumber(
+          phoneNumber: event.contact,
+          onCodeSent: () => emit(CodeSentState()),
+          onVerificationCompleted: (PhoneAuthCredential credential) async {
+            // Sign in automatically if instant verification completes.
+            await FirebaseAuth.instance.signInWithCredential(credential);
+            emit(CodeVerificationSuccess());
+          },
+          onVerificationFailed: (msg) => emit(AuthFailure(msg)),
+          onTimeout: (_) {},
+        );
+      } else {
+        await _authRepository.sendEmailVerificationCode(event.contact);
+        emit(CodeSentState());
+      }
+    } catch (e) {
+      emit(AuthFailure(e.toString()));
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // CODE VERIFICATION
+  // ---------------------------------------------------------------------------
+
+  Future<void> _onVerifyCode(
+      VerifyCodeEvent event,
+      Emitter<AuthState> emit,
+      ) async {
+    emit(CodeVerificationInProgress());
+    try {
+      if (event.isSms) {
+        await _authRepository.signInWithSmsCode(event.code);
+        emit(CodeVerificationSuccess());
+      } else {
+        final verified = await _authRepository.verifyEmailCode(
+          email: event.email ?? '',
+          code: event.code,
+        );
+        if (verified) {
+          emit(CodeVerificationSuccess());
+        } else {
+          emit(
+            CodeVerificationFailure(
+              'The code you entered is incorrect or expired.',
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      emit(CodeVerificationFailure(e.toString()));
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // RESEND CODE
+  // ---------------------------------------------------------------------------
+
+  Future<void> _onResendCode(
+      ResendCodeEvent event,
+      Emitter<AuthState> emit,
+      ) async {
+    emit(ResendCodeInProgress());
+    try {
+      if (event.isSms) {
+        await _authRepository.verifyPhoneNumber(
+          phoneNumber: event.contact,
+          onCodeSent: () => emit(ResendCodeSuccess()),
+          onVerificationCompleted: (_) {},
+          onVerificationFailed: (msg) => emit(ResendCodeFailure(msg)),
+          onTimeout: (_) {},
+        );
+      } else {
+        await _authRepository.sendEmailVerificationCode(event.contact);
+        emit(ResendCodeSuccess());
+      }
+    } catch (e) {
+      emit(ResendCodeFailure(e.toString()));
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // GOOGLE SIGN-IN
+  // ---------------------------------------------------------------------------
+
+  Future<void> _onGoogleSignIn(
+      GoogleSignInEvent event,
+      Emitter<AuthState> emit,
+      ) async {
+    emit(AuthLoading());
+    try {
+      final cred = await _authRepository.signInWithGoogle();
+      emit(AuthSuccess(cred.user!));
+    } catch (e) {
+      emit(AuthFailure(e.toString()));
+    }
   }
 }

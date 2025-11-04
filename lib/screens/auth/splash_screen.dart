@@ -1,8 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
@@ -14,23 +16,26 @@ class _SplashScreenState extends State<SplashScreen> {
     _checkAuth();
   }
 
-  void _checkAuth() async {
-    await Future.delayed(Duration(seconds: 2)); // simulate loading
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user != null) {
-      context.go('/home');  // route to your home after sign in
-    } else {
-      context.go('/signin'); // route to sign in
+  Future<void> _checkAuth() async {
+    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (mounted) {
+        if (user != null) {
+          context.go('/home');
+        } else {
+          context.go('/signin');
+        }
+      }
+    } catch (e) {
+      context.go('/signin');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Image.asset('assets/medilink_logo.png', width: 200), // your logo asset
-      ),
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
     );
   }
 }
