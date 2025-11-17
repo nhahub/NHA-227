@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:medilink_app/screens/auth/phone_sign_in_screen.dart';
+import 'package:medilink_app/screens/cart/cart_screen.dart';
 import 'screens/auth/splash_screen.dart';
 import 'screens/auth/signin_screen.dart';
 import 'screens/auth/signup_screen.dart';
@@ -69,6 +70,10 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/phone_sign_in',
       builder: (context, state) => const PhoneSignInScreen(),
+    ),
+    GoRoute(
+      path: '/cart',
+      builder: (context, state) => const CartScreen(),
     ),
   ],
 );

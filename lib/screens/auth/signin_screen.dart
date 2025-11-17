@@ -25,7 +25,7 @@ class _SignInScreenState extends State<SignInScreen> {
       backgroundColor: Colors.white,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthSuccess) context.go('/home');
+          if (state is AuthSuccess) context.go('/cart');
           if (state is AuthFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.error), backgroundColor: Colors.red),
@@ -168,8 +168,8 @@ class _SignInScreenState extends State<SignInScreen> {
 
                     // Google Button
                     OutlinedButton.icon(
-                      icon: Image.asset('assets/google_logo.png',
-                          width: 24, height: 24),
+                      icon: Image.asset('assets/images/google_logo.png',
+                          width: 12, height: 12),
                       label: const Text('Continue with Google',
                           style: TextStyle(color: Colors.black)),
                       style: OutlinedButton.styleFrom(
