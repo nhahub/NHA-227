@@ -22,3 +22,39 @@ class ForgotPasswordEvent extends AuthEvent {
 }
 
 class SignOutEvent extends AuthEvent {}
+
+class PhoneCodeSentEvent extends AuthEvent {
+  final String phoneNumber;
+
+  PhoneCodeSentEvent(this.phoneNumber);
+}
+
+class PhoneCodeVerifiedEvent extends AuthEvent {
+  final String smsCode;
+
+  PhoneCodeVerifiedEvent(this.smsCode);
+}
+
+class SendVerificationCodeEvent extends AuthEvent {
+  final String contact; // phone number or email
+  final bool isSms;
+  final String? email;  // for verification event
+
+  SendVerificationCodeEvent({required this.contact, required this.isSms, this.email});
+}
+
+class VerifyCodeEvent extends AuthEvent {
+  final String code;
+  final bool isSms;
+  final String? email;
+
+  VerifyCodeEvent({required this.code, required this.isSms, this.email});
+}
+
+class ResendCodeEvent extends AuthEvent {
+  final String contact;
+  final bool isSms;
+
+  ResendCodeEvent({required this.contact, required this.isSms});
+}
+class GoogleSignInEvent extends AuthEvent {}

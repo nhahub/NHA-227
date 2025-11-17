@@ -17,3 +17,22 @@ class AuthFailure extends AuthState {
 }
 
 class AuthPasswordResetEmailSent extends AuthState {}
+class CodeSentState extends AuthState {}
+
+class CodeVerificationInProgress extends AuthState {}
+
+class CodeVerificationSuccess extends AuthState {}
+
+class CodeVerificationFailure extends AuthState {
+  final String error;
+  CodeVerificationFailure(this.error);
+}
+
+class ResendCodeInProgress extends AuthState {}
+
+class ResendCodeSuccess extends AuthState {}
+
+class ResendCodeFailure extends AuthState {
+  final String error;
+  ResendCodeFailure(this.error);
+}
