@@ -44,40 +44,21 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCALyqgAmSfNIMX8NxCEU707gepAaf285c',
-    appId: '1:893382002165:android:8a226b180c0203a9ed4cbc',
-    messagingSenderId: '893382002165',
-    projectId: 'medilink-e9a73',
-    storageBucket: 'medilink-e9a73.firebasestorage.app',
+    apiKey: 'AIzaSyDQQmHJzdZfXUinlXaNq7uGZHytSpyi-a4',
+    appId: '1:214737590735:android:1682a060f4680465069aba',
+    messagingSenderId: '214737590735',
+    projectId: 'medilink-36fad',
+    storageBucket: 'medilink-36fad.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyA_mqp-H7VUe91bz4T1IC6JG21vJtu4IoE',
-    appId: '1:893382002165:ios:f79f836e6b2ea325ed4cbc',
-    messagingSenderId: '893382002165',
-    projectId: 'medilink-e9a73',
-    storageBucket: 'medilink-e9a73.firebasestorage.app',
+    apiKey: 'AIzaSyD4WMn8yKi5NzqPs0AIueynmZ7YRDT0mkc',
+    appId: '1:214737590735:ios:4fa260dc3f6b9d8a069aba',
+    messagingSenderId: '214737590735',
+    projectId: 'medilink-36fad',
+    storageBucket: 'medilink-36fad.firebasestorage.app',
+    iosClientId: '214737590735-pei6t8vdmp4si86urhr9i6gb7k4th915.apps.googleusercontent.com',
     iosBundleId: 'com.example.medilinkApp',
-  );
-
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBoNAH99P8uZkXQmeLA6Y1Qr2a12SlC1R8',
-    appId: '1:893382002165:web:78afc9fc876600beed4cbc',
-    messagingSenderId: '893382002165',
-    projectId: 'medilink-e9a73',
-    authDomain: 'medilink-e9a73.firebaseapp.com',
-    storageBucket: 'medilink-e9a73.firebasestorage.app',
-    measurementId: 'G-34DVPN9029',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBoNAH99P8uZkXQmeLA6Y1Qr2a12SlC1R8',
-    appId: '1:893382002165:web:2eb9a7e9dcf757e7ed4cbc',
-    messagingSenderId: '893382002165',
-    projectId: 'medilink-e9a73',
-    authDomain: 'medilink-e9a73.firebaseapp.com',
-    storageBucket: 'medilink-e9a73.firebasestorage.app',
-    measurementId: 'G-V71TSNKNCT',
   );
 
 }

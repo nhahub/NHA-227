@@ -1,63 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'firebase_options.dart';
-import 'routes/app_routes.dart';
+import 'blocs/auth/auth_bloc.dart';
+import 'repositories/auth_repository.dart';
+import 'router.dart';
 
-Future main() async {
-WidgetsFlutterBinding.ensureInitialized();
-
-await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-// Ensure we have a user (anonymous ok for dev)
-final auth = FirebaseAuth.instance;
-if (auth.currentUser == null) {
-await auth.signInAnonymously();
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(const MyApp());
 }
 
-// Ensure parent user doc exists
-await _ensureUserDoc(auth.currentUser!.uid);
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
-  // 4) Debug prints (confirm project/uid)
-  debugPrint('Firebase ProjectId: ${DefaultFirebaseOptions.currentPlatform.projectId}');
-  debugPrint('FirebaseAppId: ${DefaultFirebaseOptions.currentPlatform.appId}');
-  final apiKey = DefaultFirebaseOptions.currentPlatform.apiKey;
-  debugPrint('Firebase ApiKey: ${apiKey.substring(0, 6)}...');
-  debugPrint('AuthUID: ${auth.currentUser?.uid}');
+  @override
+  Widget build(BuildContext context) {
+    final authRepository = AuthRepository();
 
-  runApp(const MedlinkApp());
-}
-
-Future _ensureUserDoc(String uid) async {
-final ref = FirebaseFirestore.instance.collection('users').doc(uid);
-await ref.set(
-{
-'createdAt': FieldValue.serverTimestamp(),
-'updatedAt': FieldValue.serverTimestamp(),
-},
-SetOptions(merge: true),
-);
-}
-
-class MedlinkApp extends StatelessWidget {
-const MedlinkApp({super.key});
-
-@override
-Widget build(BuildContext context) {
-const brandBlue = Color(0xFF0E5AA6);
-return MaterialApp(
-title: 'Medlink Pharmacy',
-debugShowCheckedModeBanner: false,
-theme: ThemeData(
-colorScheme: ColorScheme.fromSeed(seedColor: brandBlue),
-scaffoldBackgroundColor: const Color(0xFFF2F7FB),
-useMaterial3: false,
-),
-initialRoute: AppRoutes.cart,
-routes: AppRoutes.routes, // simple routes
-onGenerateRoute: AppRoutes.onGenerateRoute, // enables fade + fallback
-);
-}
+    return BlocProvider(
+      create: (_) => AuthBloc(authRepository),
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        routerConfig: router,
+        title: 'Medilink',
+        theme: ThemeData(primarySwatch: Colors.blue),
+      ),
+    );
+  }
 }
