@@ -1,0 +1,122 @@
+rules_version = '2';
+service cloud.firestore {
+match /databases/{database}/documents {
+
+// ---------- Helpers ----------
+function isSignedIn() {
+  return request.auth != null;
+}
+
+function isOwner(uid) {
+  return isSignedIn() && request.auth.uid == uid;
+}
+
+function isNonEmptyString(v) { return v is string && v.size() > 0; }
+function isPositiveInt(v)    { return v is int && v > 0; }
+function isNonNegInt(v)      { return v is int && v >= 0; }
+function isNonNegNum(v)      { return (v is int || v is float) && v >= 0; }
+function isTimestamp(v)      { return v is timestamp; }
+
+function isValidStatus(s) {
+  return s is string && (s == 'In Process' || s == 'Delivered' || s == 'Canceled');
+}
+
+// ---------- Validators (expression-only) ----------
+
+// No CVV allowed anywhere
+function noCvvKeys(data) {
+  return !(data.keys().hasAny(['cvv', 'cvc', 'securityCode']));
+}
+
+function isValidPaymentMethod(data) {
+  return (data.type is string)
+    && noCvvKeys(data)
+    && (
+      // Card
+      (data.type == 'card'
+        && isNonEmptyString(data.holderName)
+        && isNonEmptyString(data.brand)
+        && isNonEmptyString(data.last4)
+        && isNonEmptyString(data.expMonth)
+        && isNonEmptyString(data.expYear)
+        && (data.saved is bool)
+        && isTimestamp(data.createdAt)
+      )
+      ||
+      // PayPal
+      (data.type == 'paypal'
+        && isNonEmptyString(data.email)
+        && (data.saved is bool)
+        && isTimestamp(data.createdAt)
+      )
+    );
+}
+
+function isValidCartItem(data) {
+  return isNonEmptyString(data.productId)
+    && isNonEmptyString(data.title)
+    && isNonEmptyString(data.imageUrl)
+    && ( !('description' in data) || (data.description is string) )
+    && isNonNegNum(data.price)
+    && isPositiveInt(data.qty)
+    && ( !('createdAt' in data) || isTimestamp(data.createdAt) );
+}
+
+function isValidOrderDoc(data) {
+  return isNonNegNum(data.subtotal)
+    && isNonNegNum(data.shipping)
+    && isNonNegNum(data.total)
+    && isNonNegInt(data.itemsCount)
+    && isNonNegInt(data.totalQty)
+    && isValidStatus(data.status)
+    && isTimestamp(data.createdAt)
+    && data.total == (data.subtotal + ((data.itemsCount > 0) ? data.shipping : 0));
+}
+
+function isValidOrderItem(data) {
+  return isNonEmptyString(data.productId)
+    && isNonEmptyString(data.title)
+    && isNonEmptyString(data.imageUrl)
+    && isNonNegNum(data.price)
+    && isPositiveInt(data.qty);
+}
+
+// ---------- Rules ----------
+match /users/{uid} {
+  // user doc (for updatedAt, etc.)
+  allow read, create, update: if isOwner(uid);
+  allow delete: if false;
+
+  // Cart
+  match /cart/{cartItemId} {
+    allow read:   if isOwner(uid);
+    allow create: if isOwner(uid) && isValidCartItem(request.resource.data);
+    allow update: if isOwner(uid) && isValidCartItem(request.resource.data);
+    allow delete: if isOwner(uid);
+  }
+
+  // Payment methods
+  match /paymentMethods/{pmId} {
+    allow read:   if isOwner(uid);
+    allow create: if isOwner(uid) && isValidPaymentMethod(request.resource.data);
+    allow update: if isOwner(uid) && isValidPaymentMethod(request.resource.data);
+    allow delete: if isOwner(uid);
+  }
+
+  // Orders
+  match /orders/{orderId} {
+    allow read:   if isOwner(uid);
+    allow create: if isOwner(uid) && isValidOrderDoc(request.resource.data);
+    allow update: if isOwner(uid) && isValidOrderDoc(request.resource.data);
+    allow delete: if false;
+
+    match /items/{itemId} {
+      allow read:   if isOwner(uid);
+      allow create: if isOwner(uid) && isValidOrderItem(request.resource.data);
+      allow update: if isOwner(uid) && isValidOrderItem(request.resource.data);
+      allow delete: if false;
+    }
+  }
+}
+}
+}
