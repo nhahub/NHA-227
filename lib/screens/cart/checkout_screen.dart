@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({Key? key}) : super(key: key);
@@ -12,7 +13,6 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State {
   static const brandBlue = Color(0xFF0E5AA6);
-
 
   // Card form
   final GlobalKey<FormState> _cardFormKey = GlobalKey<FormState>();
@@ -165,6 +165,7 @@ class _CheckoutScreenState extends State {
     if (!mounted) return;
     Navigator.pop(context, success);
   }
+
   bool _adding = false;
   final Duration _addCooldown = Duration(seconds: 1);
   DateTime? _nextAddAllowed;
@@ -175,16 +176,16 @@ class _CheckoutScreenState extends State {
   void _startAddCooldown() {
     _nextAddAllowed = DateTime.now().add(_addCooldown);
   }
+
   Future _onAdd() async {
     if (_adding || _addCoolingDown) return; // guard
-
 
     try {
       if (_method == 'paypal') {
         if (_paypalFormKey.currentState?.validate() != true) return;
-            setState(() => _adding = true);
-    _startAddCooldown();
-       final success = await _savePayPalToFirestore(
+        setState(() => _adding = true);
+        _startAddCooldown();
+        final success = await _savePayPalToFirestore(
           email: _paypalEmailCtrl.text.trim(),
           saved: _saveForFuture,
         );
@@ -198,15 +199,15 @@ class _CheckoutScreenState extends State {
 
       // Card
       if (_cardFormKey.currentState?.validate() != true) return;
-          setState(() => _adding = true);
-    _startAddCooldown();
+      setState(() => _adding = true);
+      _startAddCooldown();
       final success = await _saveCardToFirestore(
         holderName: _holderCtrl.text.trim(),
         cardNumber: _numberCtrl.text.trim(),
         exp: _expCtrl.text.trim(),
         saved: _saveForFuture,
       );
-     await _notifyAndBack(
+      await _notifyAndBack(
         success: success,
         okMsg: 'Card added successfully',
         failMsg: 'Failed to add card',
@@ -384,29 +385,30 @@ class _CheckoutScreenState extends State {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       SizedBox(
-                        width: 120,
+                        width: 130,
                         height: 33,
                         child: OutlinedButton(
                           onPressed: () {
-                            Navigator.pop(context, false); // back to Cart
+                            context.go('/cart'); // back to Cart
                           },
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text('Cancel'),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(color: Colors.black),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       SizedBox(
-                        width: 120,
+                        width: 130,
                         height: 33,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: brandBlue,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -427,6 +429,9 @@ class _CheckoutScreenState extends State {
                                   _method == 'paypal'
                                       ? 'Add PayPal'
                                       : 'Add Card',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(color: Colors.white),
                                 ),
                         ),
                       ),
@@ -601,7 +606,7 @@ class _Input extends StatelessWidget {
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
   final List<TextInputFormatter>? inputFormatters;
-  final ValueChanged<String>? onChanged; 
+  final ValueChanged<String>? onChanged;
 
   const _Input({
     Key? key,

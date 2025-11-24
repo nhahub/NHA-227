@@ -61,10 +61,18 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
-        body: const Center(
-          child: Text(
-            'Welcome to Medilink!',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        body: Center(
+          child: Column(
+            children: [
+              Text(
+                'Welcome to Medilink!',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              ElevatedButton(
+                onPressed: () => context.go('/cart'),
+                child: Text('This is the home screen.'),
+              ),
+            ],
           ),
         ),
       ),

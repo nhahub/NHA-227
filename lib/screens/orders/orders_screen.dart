@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../services/cart_orders_service.dart';
 import '../../models/order.dart';
 
@@ -40,16 +41,16 @@ class _OrdersScreenState extends State {
     // Replace with your real routes
     switch (i) {
       case 0:
-        Navigator.of(context).pushReplacementNamed('/lastOrder');
+        context.go('/lastOrder');
         break;
       case 1:
         // already here
         break;
       case 2:
-        Navigator.of(context).pushReplacementNamed('/cart');
+        context.go('/cart');
         break;
       case 3:
-        Navigator.of(context).pushReplacementNamed('/account');
+        context.go('/cart');
         break;
     }
   }
