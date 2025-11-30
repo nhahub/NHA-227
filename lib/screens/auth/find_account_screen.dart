@@ -7,7 +7,7 @@ import '../../blocs/auth/auth_state.dart';
 
 class FindAccountScreen extends StatefulWidget {
   final bool byMobile;
-  const FindAccountScreen({this.byMobile = true});
+  const FindAccountScreen({super.key, this.byMobile = true});
 
   @override
   State<FindAccountScreen> createState() => _FindAccountScreenState();

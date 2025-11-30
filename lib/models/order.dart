@@ -105,7 +105,7 @@ if (kIsWeb) {
 // On web you usually get a JS date -> Timestamp; keep generic handling below
 }
 // Firestore Timestamp has a toDate() method; avoid hard import
-if (v is dynamic && v is Object && (v as Object).toString().contains('Timestamp')) {
+if (v is Object && (v).toString().contains('Timestamp')) {
 // Try to call toDate via dynamic
 final toDate = (v as dynamic).toDate;
 if (toDate is Function) return toDate() as DateTime;

@@ -8,7 +8,7 @@ import '../../blocs/auth/auth_state.dart';
 
 class VerifyCodeScreen extends StatefulWidget {
   final bool isSmsVerification;
-  const VerifyCodeScreen({this.isSmsVerification = false});
+  const VerifyCodeScreen({super.key, this.isSmsVerification = false});
 
   @override
   State<VerifyCodeScreen> createState() => _VerifyCodeScreenState();
