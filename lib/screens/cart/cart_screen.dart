@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:medilink_app/screens/orders/orders_screen.dart';
+import 'package:go_router/go_router.dart'; // Added for navigation
 
 import '../../models/cart_item.dart';
 import '../../services/cart_orders_service.dart';
@@ -8,7 +8,7 @@ import '../../services/payment_service.dart';
 import 'checkout_screen.dart';
 
 class CartScreen extends StatefulWidget {
-  const CartScreen({Key? key}) : super(key: key);
+  const CartScreen({super.key});
 
   @override
   State<CartScreen> createState() => _CartScreenState();
@@ -29,7 +29,7 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   // Compute subtotal from current items
-  double _subtotal(List items) =>
+  double _subtotal(List<CartItem> items) =>
       items.fold(0.0, (sum, e) => sum + (e.price * e.qty));
 
   // Dev helper (remove when product flow is ready)
@@ -56,7 +56,7 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   // Check payment method; open checkout if needed; then confirm and place order
-  Future _onCheckout(List items) async {
+  Future _onCheckout(List<CartItem> items) async {
     if (items.isEmpty) return;
 
     // 1) Check payment method
@@ -69,7 +69,8 @@ class _CartScreenState extends State<CartScreen> {
 
     // 2) If no payment -> go add card and EXIT
     if (!hasPayment) {
-      final added = await Navigator.of(
+      if (!mounted) return;
+      await Navigator.of(
         context,
       ).push(MaterialPageRoute(builder: (_) => const CheckoutScreen()));
       return; // important: nothing else happens on this tap
@@ -79,7 +80,7 @@ class _CartScreenState extends State<CartScreen> {
     await _confirmAndPlaceOrder(items);
   }
 
-  Future _confirmAndPlaceOrder(List items) async {
+  Future _confirmAndPlaceOrder(List<CartItem> items) async {
     final subtotal = _subtotal(items);
     const shipping = 20.0;
     final total = subtotal + (items.isEmpty ? 0 : shipping);
@@ -99,7 +100,7 @@ class _CartScreenState extends State<CartScreen> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _summaryRow('Items', '${totalQty}'),
+                  _summaryRow('Items', '$totalQty'),
                   const SizedBox(height: 6),
                   _summaryRow('Subtotal', '${subtotal.toStringAsFixed(0)} EG'),
                   _summaryRow('Shipping', '${shipping.toStringAsFixed(0)} EG'),
@@ -120,12 +121,7 @@ class _CartScreenState extends State<CartScreen> {
                   onPressed: confirmDisabled
                       ? null
                       : () {
-                          // optional: local cooldown before closing
                           setLocalState(() => confirmDisabled = true);
-                          // If you prefer to show disabled state for 300ms:
-                          // Future.delayed(const Duration(milliseconds: 300), () {
-                          // Navigator.pop(context, true);
-                          // });
                           Navigator.pop(context, true); // single click only
                         },
                   child: const Text('Confirm'),
@@ -147,11 +143,11 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  Future _placeOrder(List items) async {
+  Future _placeOrder(List<CartItem> items) async {
     if (items.isEmpty) return;
     try {
       // Primary happy path
-      final orderId = await _svc.placeOrderFromCart(
+      await _svc.placeOrderFromCart(
         shipping: 20,
         status: 'In Process',
       );
@@ -163,39 +159,15 @@ class _CartScreenState extends State<CartScreen> {
           backgroundColor: Color(0xFF16A34A),
         ),
       );
-      // Optional: navigate to orders
-      // Navigator.of(context).pushReplacementNamed('/orders');
-    } on FirebaseException catch (e, st) {
-      // Log full details
-      debugPrint('placeOrderFromCart failed: ${e.code}−${e.message}');
-      debugPrint('$st');
-      final created = await _svc.wasRecentOrderCreated();
-      if (created && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Order placed successfully'),
-            backgroundColor: Color(0xFF16A34A),
-          ),
-        );
-        return;
-      }
-
+    } catch (e) {
+      debugPrint('Error placing order: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
             'There was a problem placing the order try again later',
           ),
-          backgroundColor: const Color(0xFFDC2626),
-        ),
-      );
-    } catch (e, st) {
-      debugPrint('Unknown error placing order');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('There was a problem placing the order try again later'),
-          backgroundColor: const Color(0xFFDC2626),
+          backgroundColor: Color(0xFFDC2626),
         ),
       );
     }
@@ -239,11 +211,6 @@ class _CartScreenState extends State<CartScreen> {
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          OutlinedButton(
-                            onPressed: _addSample,
-                            child: const Text('Add sample item'),
                           ),
                         ],
                       ),
@@ -299,7 +266,7 @@ class _CartScreenState extends State<CartScreen> {
                                   Row(
                                     children: [
                                       Text(
-                                        '${item.price.toStringAsFixed(0)}EG',
+                                        '${item.price.toStringAsFixed(0)} EG',
                                         style: const TextStyle(
                                           fontSize: 16,
                                           color: brandBlue,
@@ -308,11 +275,11 @@ class _CartScreenState extends State<CartScreen> {
                                       ),
                                       const Spacer(),
                                       Text(
-                                        'total : ${(item.price * item.qty).toStringAsFixed(0)}EG',
+                                        'Total: ${(item.price * item.qty).toStringAsFixed(0)} EG',
                                         style: const TextStyle(
-                                          fontSize: 16,
-                                          color: brandBlue,
-                                          fontWeight: FontWeight.w700,
+                                          fontSize: 14,
+                                          color: Colors.grey,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ],
@@ -376,62 +343,100 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const Divider(thickness: 1, indent: 24, endIndent: 24),
-
-            // Footer: total + Checkout
+            
+            // --- FOOTER WITH BREAKDOWN ---
             StreamBuilder<List<CartItem>>(
               stream: _svc.watchCart().map((e) => e.cast<CartItem>()),
               builder: (context, snap) {
                 final items = snap.data ?? [];
                 final subtotal = _subtotal(items);
-                final shipping = items.isEmpty ? 0 : 20;
+                final shipping = items.isEmpty ? 0 : 20; // Hardcoded Shipping
                 final total = subtotal + shipping;
 
-                return Padding(
+                if (items.isEmpty) return const SizedBox.shrink();
+
+                return Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
-                    vertical: 12,
+                    vertical: 20,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 10,
+                        offset: Offset(0, -2),
+                      )
+                    ],
                   ),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Total Price : ${total.toStringAsFixed(0)} EG',
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.black87,
+                      // Breakdown Rows
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Subtotal', style: TextStyle(color: Colors.grey)),
+                          Text('${subtotal.toStringAsFixed(0)} EG', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Shipping', style: TextStyle(color: Colors.grey)),
+                          Text('${shipping.toStringAsFixed(0)} EG', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const Divider(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Total', 
+                            style: TextStyle(
+                              fontSize: 18, 
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            )
                           ),
-                        ),
+                          Text(
+                            '${total.toStringAsFixed(0)} EG', 
+                            style: const TextStyle(
+                              fontSize: 20, 
+                              fontWeight: FontWeight.w800,
+                              color: brandBlue,
+                            )
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 18),
                       SizedBox(
-                        width: 260,
+                        width: double.infinity,
+                        height: 54,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: brandBlue,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 20,
-                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
+                            elevation: 0,
                           ),
                           onPressed:
-                              (items.isEmpty || _processing || _isCoolingDown)
+                              (_processing || _isCoolingDown)
                               ? null
                               : () {
-                                  _startCooldown(); // start timeout immediately
-                                  _onCheckout(items); // run your flow
-                                }, // unchanged call
+                                  _startCooldown();
+                                  _onCheckout(items);
+                                },
                           child: _processing
                               ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
+                                  height: 24,
+                                  width: 24,
                                   child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+                                    strokeWidth: 2.5,
                                     color: Colors.white,
                                   ),
                                 )
@@ -450,17 +455,8 @@ class _CartScreenState extends State<CartScreen> {
                 );
               },
             ),
-            const SizedBox(height: 8),
           ],
         ),
-      ),
-
-      // Dev: add sample product (remove when product flow is ready)
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _addSample,
-        backgroundColor: brandBlue,
-        icon: const Icon(Icons.add_shopping_cart),
-        label: const Text('Add sample'),
       ),
     );
   }
@@ -482,9 +478,9 @@ Widget _summaryRow(String label, String value, {bool isBold = false}) {
   );
 }
 
-// Header: logo + back + title (keeps your existing look)
+// Header: logo + back + title
 class _CartHeader extends StatelessWidget {
-  const _CartHeader({Key? key}) : super(key: key);
+  const _CartHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -519,9 +515,14 @@ class _CartHeader extends StatelessWidget {
                       color: brandBlue,
                       size: 28,
                     ),
-                    onPressed: () => Navigator.of(
-                      context,
-                    ).push(MaterialPageRoute(builder: (_) => OrdersScreen())),
+                    onPressed: () {
+                      if (Navigator.of(context).canPop()) {
+                        Navigator.of(context).pop();
+                      } else {
+                        // If pushed directly via bottom nav or link, go to Home
+                        context.go('/home');
+                      }
+                    },
                   ),
                 ),
                 const Text(
@@ -546,7 +547,7 @@ class _CartHeader extends StatelessWidget {
 // Asset or network image helper
 class _ImageFrom extends StatelessWidget {
   final String pathOrUrl;
-  const _ImageFrom(this.pathOrUrl, {Key? key}) : super(key: key);
+  const _ImageFrom(this.pathOrUrl);
 
   @override
   Widget build(BuildContext context) {
@@ -580,14 +581,14 @@ class RoundAssetButton extends StatefulWidget {
   final PressMode mode; // momentary = while pressed, toggle = stays after tap
 
   const RoundAssetButton({
-    Key? key,
+    super.key,
     required this.asset,
     required this.activeAsset,
     required this.onTap,
     this.size = 44,
     this.background = Colors.white,
     this.mode = PressMode.momentary,
-  }) : super(key: key);
+  });
 
   @override
   State<RoundAssetButton> createState() => RoundAssetButtonState();

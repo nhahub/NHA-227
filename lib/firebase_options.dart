@@ -53,4 +53,5 @@ class DefaultFirebaseOptions {
     iosClientId: '214737590735-pei6t8vdmp4si86urhr9i6gb7k4th915.apps.googleusercontent.com',
     iosBundleId: 'com.example.medilinkApp',
   );
+
 }

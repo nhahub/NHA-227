@@ -5,13 +5,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 
 class CheckoutScreen extends StatefulWidget {
-  const CheckoutScreen({Key? key}) : super(key: key);
+  const CheckoutScreen({super.key});
 
   @override
-  State createState() => _CheckoutScreenState();
+  State<CheckoutScreen> createState() => _CheckoutScreenState();
 }
 
-class _CheckoutScreenState extends State {
+class _CheckoutScreenState extends State<CheckoutScreen> {
   static const brandBlue = Color(0xFF0E5AA6);
 
   // Card form
@@ -54,7 +54,7 @@ class _CheckoutScreenState extends State {
       .doc(_uid)
       .collection('paymentMethods');
 
-  Future _saveCardToFirestore({
+  Future<bool> _saveCardToFirestore({
     required String holderName,
     required String cardNumber, // we will store only brand + last4
     required String exp, // MM/YY
@@ -86,7 +86,7 @@ class _CheckoutScreenState extends State {
     }
   }
 
-  Future _savePayPalToFirestore({
+  Future<bool> _savePayPalToFirestore({
     required String email,
     required bool saved,
   }) async {
@@ -142,7 +142,7 @@ class _CheckoutScreenState extends State {
 
   String? _validateEmail(String? v) {
     final s = (v ?? '').trim();
-    final r = RegExp(r'^[^@\s]+@[^@\s]+.[^@\s]+$');
+    final r = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
     if (!r.hasMatch(s)) return 'Enter a valid email';
     return null;
   }
@@ -167,7 +167,7 @@ class _CheckoutScreenState extends State {
   }
 
   bool _adding = false;
-  final Duration _addCooldown = Duration(seconds: 1);
+  final Duration _addCooldown = const Duration(seconds: 1);
   DateTime? _nextAddAllowed;
 
   bool get _addCoolingDown =>
@@ -177,7 +177,7 @@ class _CheckoutScreenState extends State {
     _nextAddAllowed = DateTime.now().add(_addCooldown);
   }
 
-  Future _onAdd() async {
+  Future<void> _onAdd() async {
     if (_adding || _addCoolingDown) return; // guard
 
     try {
@@ -239,14 +239,14 @@ class _CheckoutScreenState extends State {
                 children: [
                   _MethodTile(
                     label: 'Credit Card',
-                    imageAsset: 'assets/images/visa.png',
+                    imageAsset: 'assets/images/visa.png', // Ensure asset exists or change
                     selected: _method == 'card',
                     onTap: () => setState(() => _method = 'card'),
                   ),
                   const SizedBox(height: 12),
                   _MethodTile(
                     label: 'PayPal',
-                    imageAsset: 'assets/images/paypal.png',
+                    imageAsset: 'assets/images/paypal.png', // Ensure asset exists or change
                     selected: _method == 'paypal',
                     onTap: () => setState(() => _method = 'paypal'),
                   ),
@@ -371,7 +371,7 @@ class _CheckoutScreenState extends State {
                         activeColor: brandBlue,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
-                          side: BorderSide(color: Colors.black26),
+                          side: const BorderSide(color: Colors.black26),
                         ),
                       ),
                       const Expanded(
@@ -389,7 +389,7 @@ class _CheckoutScreenState extends State {
                         height: 33,
                         child: OutlinedButton(
                           onPressed: () {
-                            context.go('/cart'); // back to Cart
+                            context.pop(); // FIXED: Using context.pop() instead of navigation
                           },
                           style: OutlinedButton.styleFrom(
                             shape: RoundedRectangleBorder(
@@ -519,8 +519,7 @@ class _MethodTile extends StatelessWidget {
     required this.imageAsset,
     required this.selected,
     required this.onTap,
-    Key? key,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -540,7 +539,12 @@ class _MethodTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Image.asset(imageAsset, height: 22),
+            // Safe image loading in case asset is missing
+            Image.asset(
+              imageAsset, 
+              height: 22,
+              errorBuilder: (ctx, err, stack) => const Icon(Icons.payment, size: 22),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -582,7 +586,7 @@ class _MethodTile extends StatelessWidget {
 // Label + input
 class _FieldLabel extends StatelessWidget {
   final String text;
-  const _FieldLabel(this.text, {Key? key}) : super(key: key);
+  const _FieldLabel(this.text);
 
   @override
   Widget build(BuildContext context) {
@@ -609,14 +613,13 @@ class _Input extends StatelessWidget {
   final ValueChanged<String>? onChanged;
 
   const _Input({
-    Key? key,
     required this.controller,
     required this.hint,
     this.keyboardType,
     this.validator,
     this.inputFormatters,
     this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
