@@ -7,8 +7,6 @@ import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
-
   @override
   _SignUpScreenState createState() => _SignUpScreenState();
 }
@@ -161,9 +159,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                         validator: (val) {
                           if (val == null || val.isEmpty) return 'Please confirm password';
-                          if (val != _passwordController.text) {
+                          if (val != _passwordController.text)
                             return 'Passwords do not match';
-                          }
                           return null;
                         },
                       ),

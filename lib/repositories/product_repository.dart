@@ -137,4 +137,18 @@ class ProductRepository extends ChangeNotifier {
     _initListeners();
     notifyListeners();
   }
+  // Add to ProductRepository class
+bool isFavoriteById(String productId) {
+  return products.any((p) => p.id == productId && p.isFavorite);
+}
+
+void toggleFavoriteById(String productId) {
+  final product = products.firstWhere(
+    (p) => p.id == productId,
+    orElse: () => products.first, // fallback
+  );
+  if (product.id == productId) {
+    toggleFavorite(productId);
+  }
+}
 }

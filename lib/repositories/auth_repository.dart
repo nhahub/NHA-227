@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,8 +8,11 @@ import 'package:google_sign_in/google_sign_in.dart';
 class AuthRepository {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance; // ← ADD THIS LINE
 
-  String? _verificationId; // Saved during phone verification
+  String? _verificationId;
+  
+  // ... rest of your code
 
   // ---------------------------------------------------------------------------
   // PUBLIC: UID stream/getter + sign-in navigation hooks (added for Cart/Orders)
@@ -70,19 +74,48 @@ class AuthRepository {
     }
   }
 
-  Future signUp({required String email, required String password}) async {
-    try {
-      final cred = await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email.trim(),
-        password: password.trim(),
-      );
-      return cred.user!;
-    } on FirebaseAuthException catch (e) {
-      throw Exception(_formatFirebaseError(e));
-    } catch (e) {
-      throw Exception('Unexpected sign up error: $e');
+ Future<User> signUp({
+  required String name,
+  required String email,
+  required String password,
+}) async {
+  try {
+    final cred = await _firebaseAuth.createUserWithEmailAndPassword(
+      email: email.trim(),
+      password: password.trim(),
+    );
+    
+    final user = cred.user;
+    if (user != null) {
+      print('🔵 User created with UID: ${user.uid}'); // DEBUG
+      
+      // Update display name in Firebase Auth
+      await user.updateDisplayName(name.trim());
+      await user.reload();
+      print('🔵 Display name updated: ${name.trim()}'); // DEBUG
+      
+      // Save user data to Firestore
+      await _firestore.collection('users').doc(user.uid).set({
+        'name': name.trim(),
+        'email': email.trim(),
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      print('🔵 Firestore data saved for: $name'); // DEBUG
+      
+      // Verify data was saved
+      final doc = await _firestore.collection('users').doc(user.uid).get();
+      print('🔵 Firestore data read back: ${doc.data()}'); // DEBUG
     }
+    
+    return user!;
+  } on FirebaseAuthException catch (e) {
+    print('🔴 Firebase Auth Error: ${e.code} - ${e.message}'); // DEBUG
+    throw Exception(_formatFirebaseError(e));
+  } catch (e) {
+    print('🔴 Unexpected error: $e'); // DEBUG
+    throw Exception('Unexpected sign up error: $e');
   }
+}
 
   Future sendPasswordResetEmail(String email) async {
     try {

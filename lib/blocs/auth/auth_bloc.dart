@@ -41,18 +41,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   // SIGN-UP
   // ---------------------------------------------------------------------------
 
-  Future<void> _onSignUp(SignUpEvent event, Emitter<AuthState> emit) async {
-    emit(AuthLoading());
-    try {
-      final user = await _authRepository.signUp(
-        email: event.email,
-        password: event.password,
-      );
-      emit(AuthSuccess(user));
-    } catch (e) {
-      emit(AuthFailure(e.toString()));
-    }
+Future<void> _onSignUp(SignUpEvent event, Emitter<AuthState> emit) async {
+  emit(AuthLoading());
+  try {
+    final user = await _authRepository.signUp(
+      name: event.name,              // ✅ ADD THIS LINE
+      email: event.email,
+      password: event.password,
+    );
+    emit(AuthSuccess(user));
+  } catch (e) {
+    emit(AuthFailure(e.toString()));
   }
+}
 
   // ---------------------------------------------------------------------------
   // FORGOT PASSWORD

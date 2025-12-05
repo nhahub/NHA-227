@@ -2,6 +2,8 @@ import 'package:go_router/go_router.dart';
 import 'package:medilink_app/models/category_model.dart';
 import 'package:medilink_app/models/pharmacy_model.dart';
 import 'package:medilink_app/models/product_model.dart';
+import 'package:medilink_app/screens/help_us.dart';
+import 'package:medilink_app/screens/profile_screen.dart';
 import 'package:medilink_app/screens/active_ingredient.dart';
 import 'package:medilink_app/screens/auth/phone_sign_in_screen.dart';
 import 'package:medilink_app/screens/cart/cart_screen.dart';
@@ -32,7 +34,7 @@ final GoRouter router = GoRouter(
     // --- Auth Routes ---
     GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
     GoRoute(path: '/signin', builder: (context, state) => const SignInScreen()),
-    GoRoute(path: '/signup', builder: (context, state) => const SignUpScreen()),
+    GoRoute(path: '/signup', builder: (context, state) =>  SignUpScreen()),
     GoRoute(path: '/forgot_password', builder: (context, state) => const ForgotPasswordScreen()),
     GoRoute(path: '/phone_sign_in', builder: (context, state) => const PhoneSignInScreen()),
     GoRoute(path: '/password_reset_sent', builder: (context, state) => const PasswordResetConfirmationScreen()),
@@ -104,6 +106,14 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/lastOrder',
       builder: (context, state) => const LastOrderScreen(),
+    ),
+      GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProfileScreen(),
+    ),
+          GoRoute(
+      path: '/helpus',
+      builder: (context, state) => const HelpUsScreen(),
     ),
   ],
 );

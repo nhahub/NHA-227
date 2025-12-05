@@ -9,10 +9,17 @@ import 'package:medilink_app/repositories/product_repository.dart';
 import 'package:medilink_app/services/cart_orders_service.dart';
 import 'package:provider/provider.dart';
 
-class ProductCard extends StatelessWidget {
+class ProductCard extends StatefulWidget {
   final Product product;
 
   const ProductCard({super.key, required this.product});
+
+  @override
+  State<ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<ProductCard> {
+  bool _isAddedToCart = false;
 
   // LOGIC: Add to cart
   Future<void> _addToCart(BuildContext context) async {
@@ -30,20 +37,25 @@ class ProductCard extends StatelessWidget {
 
     try {
       final cartItem = CartItem(
-        id: product.id, 
-        productId: product.id,
-        title: product.name,
-        description: product.shortDescription.isNotEmpty 
-            ? product.shortDescription 
-            : product.description,
-        imageUrl: product.imageUrl,
-        price: product.price,
+        id: widget.product.id, 
+        productId: widget.product.id,
+        title: widget.product.name,
+        description: widget.product.shortDescription.isNotEmpty 
+            ? widget.product.shortDescription 
+            : widget.product.description,
+        imageUrl: widget.product.imageUrl,
+        price: widget.product.price,
         qty: 1,
       );
 
       await CartOrdersService.instance.addOrIncItem(cartItem);
 
-      if (context.mounted) {
+      // Update state to show "Added to Cart"
+      if (mounted) {
+        setState(() {
+          _isAddedToCart = true;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Added to cart'),
@@ -65,10 +77,11 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        context.push('/product_detail', extra: product);
+        context.push('/product_detail', extra: widget.product);
       },
       child: Container(
         width: 160,
+        height: 280,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -82,11 +95,12 @@ class ProductCard extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Stack(
               children: [
                 Container(
-                  height: 120,
+                  height: 110,
                   width: double.infinity,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -94,18 +108,18 @@ class ProductCard extends StatelessWidget {
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                   ),
                   child: Center(
-                    child: (product.imageUrl.startsWith('http')
+                    child: (widget.product.imageUrl.startsWith('http')
                         ? Image.network(
-                            product.imageUrl,
-                            height: 105,
+                            widget.product.imageUrl,
+                            height: 95,
                             width: double.infinity,
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) =>
                                 const Icon(Icons.image, color: Colors.grey),
                           )
                         : Image.asset(
-                            product.imageUrl,
-                            height: 105,
+                            widget.product.imageUrl,
+                            height: 95,
                             fit: BoxFit.contain,
                           )),
                   ),
@@ -114,7 +128,7 @@ class ProductCard extends StatelessWidget {
                   top: 8,
                   left: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
                       color: AppColors.warning,
                       borderRadius: BorderRadius.circular(4),
@@ -123,7 +137,7 @@ class ProductCard extends StatelessWidget {
                       'OFFER 10',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -134,10 +148,10 @@ class ProductCard extends StatelessWidget {
                   right: 8,
                   child: GestureDetector(
                     onTap: () {
-                      context.read<ProductRepository>().toggleFavorite(product.id);
+                      context.read<ProductRepository>().toggleFavorite(widget.product.id);
                     },
                     child: Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
@@ -149,67 +163,77 @@ class ProductCard extends StatelessWidget {
                         ],
                       ),
                       child: Icon(
-                        product.isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: product.isFavorite ? Colors.red : Colors.grey,
-                        size: 18,
+                        widget.product.isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: widget.product.isFavorite ? Colors.red : Colors.grey,
+                        size: 16,
                       ),
                     ),
                   ),
                 ),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    product.description,
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.product.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${product.price.toInt()} ${product.currency}',
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                    const SizedBox(height: 3),
+                    Text(
+                      widget.product.description,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${widget.product.price.toInt()} ${widget.product.currency}',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const Spacer(),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isAddedToCart ? null : () => _addToCart(context),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          backgroundColor: _isAddedToCart ? Colors.grey : AppColors.primary,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: Colors.grey[400],
+                          disabledForegroundColor: Colors.white,
+                          minimumSize: const Size(0, 32),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_isAddedToCart)
+                              const Icon(Icons.check_circle, size: 14),
+                            if (_isAddedToCart)
+                              const SizedBox(width: 4),
+                            Text(
+                              _isAddedToCart ? 'Added to Cart' : AppStrings.addToCart,
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => _addToCart(context),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text(
-                        AppStrings.addToCart,
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
