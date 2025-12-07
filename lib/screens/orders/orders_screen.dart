@@ -264,7 +264,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
 }
 
 class _OrdersHeader extends StatelessWidget {
-  const _OrdersHeader({super.key});
+  const _OrdersHeader();
 
   @override
   Widget build(BuildContext context) {

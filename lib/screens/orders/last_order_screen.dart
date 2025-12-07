@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:medilink_app/core/constants/app_strings.dart';
 import 'package:medilink_app/models/product_model.dart';
 import 'package:medilink_app/repositories/product_repository.dart';
 import 'package:medilink_app/shared/widgets/custom_app_bar.dart';
