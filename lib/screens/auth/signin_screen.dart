@@ -167,39 +167,9 @@ class _SignInScreenState extends State<SignInScreen> {
                     const SizedBox(height: 24),
 
                     // Google Button
-                    OutlinedButton.icon(
-                      icon: Image.asset('assets/images/google_logo.png',
-                          width: 12, height: 12),
-                      label: const Text('Continue with Google',
-                          style: TextStyle(color: Colors.black)),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.grey[300]!),
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                      onPressed: isLoading
-                          ? null
-                          : () => context
-                          .read<AuthBloc>()
-                          .add(GoogleSignInEvent()),
-                    ),
-                    const SizedBox(height: 16),
 
                     // Phone button (restored)
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.phone, color: Colors.green),
-                      label: const Text('Continue with Phone',
-                          style: TextStyle(color: Colors.black)),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.grey[300]!),
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                      onPressed: () => context.go('/phone_sign_in'),
-                    ),
-                    const SizedBox(height: 160),
+                   
 
                     // Sign Up link
                     Center(
