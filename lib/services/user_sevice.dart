@@ -8,67 +8,103 @@ class UserService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Get current user's name with detailed debugging
   Future<String> getUserName() async {
-    print('🔍 Getting user name...'); // DEBUG
-    
     final user = _auth.currentUser;
-    if (user == null) {
-      print('🔴 No user signed in'); // DEBUG
-      return 'Guest';
-    }
-
-    print('🔵 User UID: ${user.uid}'); // DEBUG
-    print('🔵 User email: ${user.email}'); // DEBUG
-    print('🔵 Display name from Auth: ${user.displayName}'); // DEBUG
-
-    // Try getting from display name first
+    if (user == null) return 'Guest';
     if (user.displayName != null && user.displayName!.isNotEmpty) {
-      print('✅ Found name in displayName: ${user.displayName}'); // DEBUG
       return user.displayName!;
     }
-
-    // Fallback to Firestore
     try {
-      print('🔵 Fetching from Firestore...'); // DEBUG
       final doc = await _firestore.collection('users').doc(user.uid).get();
-      print('🔵 Document exists: ${doc.exists}'); // DEBUG
-      print('🔵 Document data: ${doc.data()}'); // DEBUG
-      
       if (doc.exists && doc.data() != null) {
-        final name = doc.data()?['name'];
-        print('✅ Found name in Firestore: $name'); // DEBUG
+        final name = doc.data()!['name'];
         return name ?? 'User';
       }
-      print('🔴 No data found in Firestore'); // DEBUG
       return 'User';
-    } catch (e) {
-      print('🔴 Error getting user name from Firestore: $e'); // DEBUG
+    } catch (_) {
       return 'User';
     }
   }
 
-  /// Get current user's email
   String getUserEmail() {
     return _auth.currentUser?.email ?? '';
   }
 
-  /// Get user photo URL
-  String? getUserPhotoUrl() {
-    return _auth.currentUser?.photoURL;
+  Future<void> updateProfile({
+    required String name,
+    required String email,
+    required String phone,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) throw StateError('No signed-in user');
+    await user.updateDisplayName(name);
+    if (email.isNotEmpty && email != user.email) {
+      // Firebase Auth v6 removed updateEmail; this sends a verification to apply the change.
+      await user.verifyBeforeUpdateEmail(email);
+    }
+    await _firestore.collection('users').doc(user.uid).set({
+      'name': name,
+      'email': email,
+      'phone': phone,
+    }, SetOptions(merge: true));
   }
 
-  /// Check if user is signed in
+  Future<String?> getPhone() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+    final doc = await _firestore.collection('users').doc(user.uid).get();
+    if (!doc.exists) return null;
+    return doc.data()?['phone'] as String?;
+  }
+
+  Future<bool> getNotificationsEnabled() async {
+    final user = _auth.currentUser;
+    if (user == null) return true;
+    final doc = await _firestore.collection('users').doc(user.uid).get();
+    if (doc.exists &&
+        doc.data() != null &&
+        doc.data()!.containsKey('notificationsEnabled')) {
+      return doc.data()!['notificationsEnabled'] == true;
+    }
+    return true;
+  }
+
+  Future<void> setNotificationsEnabled(bool enabled) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    await _firestore.collection('users').doc(user.uid).set({
+      'notificationsEnabled': enabled,
+    }, SetOptions(merge: true));
+  }
+
+  Future<String> getLanguage() async {
+    final user = _auth.currentUser;
+    if (user == null) return 'en';
+    final doc = await _firestore.collection('users').doc(user.uid).get();
+    if (doc.exists &&
+        doc.data() != null &&
+        doc.data()!.containsKey('language')) {
+      return (doc.data()!['language'] as String?) ?? 'en';
+    }
+    return 'en';
+  }
+
+  Future<void> setLanguage(String code) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    await _firestore.collection('users').doc(user.uid).set({
+      'language': code,
+    }, SetOptions(merge: true));
+  }
+
   bool isSignedIn() {
     return _auth.currentUser != null;
   }
 
-  /// Get current user ID
   String? getUserId() {
     return _auth.currentUser?.uid;
   }
 
-  /// Reload current user
   Future<void> reloadUser() async {
     await _auth.currentUser?.reload();
   }

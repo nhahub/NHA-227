@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class HelpUsScreen extends StatefulWidget {
-  const HelpUsScreen({Key? key}) : super(key: key);
+  const HelpUsScreen({super.key});
 
   @override
   State<HelpUsScreen> createState() => _HelpUsScreenState();

@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
-import '../../services/user_sevice.dart'; // ← ADD THIS IMPORT
+import '../../services/user_sevice.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,25 +16,41 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool notificationsEnabled = true;
-  String _userName = 'Loading...'; // ← ADD THIS
-  String _userEmail = '';           // ← ADD THIS
+  String _userName = 'Loading...';
+  String _userEmail = '';
 
   @override
   void initState() {
     super.initState();
-    _loadUserData(); // ← ADD THIS
+    _loadUserData();
   }
 
-  // ← ADD THIS METHOD
   Future<void> _loadUserData() async {
     final name = await UserService.instance.getUserName();
     final email = UserService.instance.getUserEmail();
-    if (mounted) {
-      setState(() {
-        _userName = name;
-        _userEmail = email;
-      });
-    }
+    final notif = await UserService.instance.getNotificationsEnabled();
+    if (!mounted) return;
+    setState(() {
+      _userName = name;
+      _userEmail = email;
+      notificationsEnabled = notif;
+    });
+  }
+
+  void _toggleNotifications(bool value) async {
+    setState(() {
+      notificationsEnabled = value;
+    });
+    await UserService.instance.setNotificationsEnabled(value);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          value ? 'Notifications enabled' : 'Notifications disabled',
+        ),
+        duration: const Duration(seconds: 1),
+      ),
+    );
   }
 
   void _showLogoutDialog() {
@@ -96,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onPressed: () {
                           Navigator.of(dialogContext).pop();
                           context.read<AuthBloc>().add(SignOutEvent());
-                          
+
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -142,10 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       listener: (context, state) {
         if (state is AuthFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.error),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text(state.error), backgroundColor: Colors.red),
           );
         }
       },
@@ -174,7 +187,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             children: [
               const SizedBox(height: 20),
-              // Profile Photo with Edit Icon - UPDATED WITH DYNAMIC INITIAL
+              // Avatar
               Stack(
                 children: [
                   Container(
@@ -193,14 +206,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: CircleAvatar(
                       radius: 60,
-                      backgroundColor: const Color(0xFF1976D2), // ← CHANGED COLOR
+                      backgroundColor: const Color(0xFF1976D2),
                       child: Text(
-                        _userName.isNotEmpty && 
-                        _userName != 'Loading...' && 
-                        _userName != 'User' && 
-                        _userName != 'Guest'
+                        _userName.isNotEmpty &&
+                                _userName != 'Loading...' &&
+                                _userName != 'User' &&
+                                _userName != 'Guest'
                             ? _userName[0].toUpperCase()
-                            : '?', // ← SHOW FIRST LETTER
+                            : '?',
                         style: const TextStyle(
                           fontSize: 50,
                           fontWeight: FontWeight.bold,
@@ -212,9 +225,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              // Name - DYNAMIC
               Text(
-                _userName, // ← CHANGED FROM 'Ali Mohamed'
+                _userName,
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -222,13 +234,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 4),
-              // Email - DYNAMIC
               Text(
-                _userEmail, // ← CHANGED FROM 'AliMohamed@gmail.com'
+                _userEmail,
                 style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 32),
-              // Profile Options
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -237,7 +247,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       icon: Icons.person_outline,
                       title: 'Account Information',
                       subtitle: 'Edit name, phone, email',
-                      onTap: () {},
+                      onTap: () => context.go('/account_info'),
                     ),
                     const SizedBox(height: 12),
                     _buildProfileCard(
@@ -247,20 +257,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       trailing: CupertinoSwitch(
                         value: notificationsEnabled,
                         activeTrackColor: const Color(0xFF1976D2),
-                        onChanged: (value) {
-                          setState(() {
-                            notificationsEnabled = value;
-                          });
-                        },
+                        onChanged: _toggleNotifications,
                       ),
-                      onTap: () {},
+                      onTap: () => _toggleNotifications(!notificationsEnabled),
                     ),
                     const SizedBox(height: 12),
                     _buildProfileCard(
                       icon: Icons.language_outlined,
                       title: 'Language',
                       subtitle: 'English / Arabic',
-                      onTap: () {},
+                      onTap: () => context.go('/language'),
                     ),
                     const SizedBox(height: 12),
                     _buildProfileCard(
@@ -276,10 +282,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       icon: Icons.info_outline,
                       title: 'About App',
                       subtitle: 'Version, developer info',
-                      onTap: () {},
+                      onTap: () => context.go('/about'),
                     ),
                     const SizedBox(height: 32),
-                    // Logout Button
                     Center(
                       child: SizedBox(
                         width: 160,

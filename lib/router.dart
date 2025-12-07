@@ -4,6 +4,9 @@ import 'package:medilink_app/models/pharmacy_model.dart';
 import 'package:medilink_app/models/product_model.dart';
 import 'package:medilink_app/screens/help_us.dart';
 import 'package:medilink_app/screens/profile_screen.dart';
+import 'package:medilink_app/screens/account_info_screen.dart';
+import 'package:medilink_app/screens/language_screen.dart';
+import 'package:medilink_app/screens/about_app_screen.dart';
 import 'package:medilink_app/screens/active_ingredient.dart';
 import 'package:medilink_app/screens/auth/phone_sign_in_screen.dart';
 import 'package:medilink_app/screens/cart/cart_screen.dart';
@@ -31,13 +34,21 @@ import 'screens/auth/password_reset_confirmation_screen.dart';
 final GoRouter router = GoRouter(
   initialLocation: '/',
   routes: [
-    // --- Auth Routes ---
     GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
     GoRoute(path: '/signin', builder: (context, state) => const SignInScreen()),
-    GoRoute(path: '/signup', builder: (context, state) =>  SignUpScreen()),
-    GoRoute(path: '/forgot_password', builder: (context, state) => const ForgotPasswordScreen()),
-    GoRoute(path: '/phone_sign_in', builder: (context, state) => const PhoneSignInScreen()),
-    GoRoute(path: '/password_reset_sent', builder: (context, state) => const PasswordResetConfirmationScreen()),
+    GoRoute(path: '/signup', builder: (context, state) => SignUpScreen()),
+    GoRoute(
+      path: '/forgot_password',
+      builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: '/phone_sign_in',
+      builder: (context, state) => const PhoneSignInScreen(),
+    ),
+    GoRoute(
+      path: '/password_reset_sent',
+      builder: (context, state) => const PasswordResetConfirmationScreen(),
+    ),
     GoRoute(
       path: '/verify_code',
       builder: (context, state) {
@@ -45,16 +56,13 @@ final GoRouter router = GoRouter(
         return VerifyCodeScreen(isSmsVerification: isSms);
       },
     ),
-
-    // --- Main Shell (Bottom Nav) ---
     ShellRoute(
       builder: (context, state, child) => MainShell(child: child),
       routes: [
         GoRoute(
-          path: '/home', 
+          path: '/home',
           builder: (c, s) => const HomeScreen(),
           routes: [
-            // Nested routes for Home Tab
             GoRoute(
               path: 'categories',
               builder: (context, state) => const CategoriesScreen(),
@@ -71,33 +79,36 @@ final GoRouter router = GoRouter(
               path: 'favorites',
               builder: (context, state) => const FavoritesScreen(),
             ),
-          ]
+          ],
         ),
         GoRoute(path: '/orders', builder: (c, s) => const OrdersScreen()),
         GoRoute(path: '/cart', builder: (c, s) => const CartScreen()),
       ],
     ),
-
-    // --- Detail Routes (Push on top of everything) ---
     GoRoute(
       path: '/product_detail',
-      builder: (context, state) => ProductDetailScreen(product: state.extra as Product),
+      builder: (context, state) =>
+          ProductDetailScreen(product: state.extra as Product),
     ),
     GoRoute(
       path: '/pharmacy_detail',
-      builder: (context, state) => PharmacyDetailScreen(pharmacy: state.extra as Pharmacy),
+      builder: (context, state) =>
+          PharmacyDetailScreen(pharmacy: state.extra as Pharmacy),
     ),
     GoRoute(
       path: '/category_products',
-      builder: (context, state) => CategoryProductsScreen(category: state.extra as Category),
+      builder: (context, state) =>
+          CategoryProductsScreen(category: state.extra as Category),
     ),
     GoRoute(
       path: '/related_products',
-      builder: (context, state) => RelatedScreen(currentProduct: state.extra as Product),
+      builder: (context, state) =>
+          RelatedScreen(currentProduct: state.extra as Product),
     ),
     GoRoute(
       path: '/active_ingredient',
-      builder: (context, state) => ActiveIngredientScreen(currentProduct: state.extra as Product),
+      builder: (context, state) =>
+          ActiveIngredientScreen(currentProduct: state.extra as Product),
     ),
     GoRoute(
       path: '/checkout',
@@ -107,13 +118,22 @@ final GoRouter router = GoRouter(
       path: '/lastOrder',
       builder: (context, state) => const LastOrderScreen(),
     ),
-      GoRoute(
+    GoRoute(
       path: '/profile',
       builder: (context, state) => const ProfileScreen(),
     ),
-          GoRoute(
-      path: '/helpus',
-      builder: (context, state) => const HelpUsScreen(),
+    GoRoute(path: '/helpus', builder: (context, state) => const HelpUsScreen()),
+    GoRoute(
+      path: '/account_info',
+      builder: (context, state) => const AccountInfoScreen(),
+    ),
+    GoRoute(
+      path: '/language',
+      builder: (context, state) => const LanguageScreen(),
+    ),
+    GoRoute(
+      path: '/about',
+      builder: (context, state) => const AboutAppScreen(),
     ),
   ],
 );
